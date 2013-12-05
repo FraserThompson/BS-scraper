@@ -1,93 +1,51 @@
-ES-scraper
+BS-scraper
 =====================
 ```
-usage: scraper.py [-h] [-w value] [-noimg] [-v] [-f] [-crc] [-p]
+usage: scraper.py [-h] [-noimg] [-m]
 
-ES-scraper, a scraper for EmulationStation
+BS-scraper, a modified version of ES-scraper for BeagleSNES
 
 optional arguments:
   -h, --help  show this help message and exit
-  -w value    defines a maximum width (in pixels) for boxarts (anything above
-              that will be resized to that value)
   -noimg      disables boxart downloading
-  -v          verbose output
-  -f          force re-scraping (ignores and overwrites the current gamelist)
-  -crc        CRC scraping
-  -p          partial scraping (per console)
   -m          manual mode (choose from multiple results)
-  -newpath    gamelist.xml & boxart are written in $HOME/.emulationstation/%NAME%/
-  -fix        temporary thegamesdb missing platform fix
 ```
 
-Quick script written in Python that uses various online sources to scrape artwork and game info and saves it as XML files to be read by EmulationStation.
+This is an adaptation of elpendors ES-Scraper designed for use with BeagleSNES (http://beaglesnes.sourceforge.net) which runs on the BeagleBoard-xm or BeagleBone. It scans your rom folder and generates a complete games.cfg accordingly by scraping game information from http://thegamesdb.net. It also downloads, converts, and resizes boxart for your boxes folder.
 
-If you haven't done so, please update ES before running this script.
 
 For image resizing to work, you need to install PIL:
 ```
 sudo apt-get install python-imaging
 ```
 
+Capabilities
+====================
+It will attempt to find the title of each .smc file in thegamesdb.net. Once it has guessed this it will then gather the following:
+
+* Boxart, which it will download to the ./boxes folder, also converting to .png and resizing to 200 pixels wide. If a file already exists with the same filename as the smc it will skip this step.
+* Description, which it will split over four lines.
+* Number of players, which it will put on the fifth line reserved for the description.
+* Release date.
+* Genres, which it will seperate by a slash if it finds multiples.
+
+Each of these has a default so if it can't find information in the database it won't break your config. It then writes the blank file at the end which is required by Beaglesnes, and reports which game(s) it couldn't find online.
+
 Usage
 =====================
-* Open your systems config file ($HOME/.emulationstation/es_systems.cfg) and append the corresponding [platform ID](#platform-list) to each system:
+* Ensure that all your roms are labelled correctly. It works best if your filenames are fairly similar to the actual title of the game. Some particular games will confuse thegamesdb.net eg. NHL '98 will be misidentified unless it's labelled NHL 98.smc.  Similarly you should use the number 2 instead of roman numerals II wherever possible.
+* Run the script with python ./scraper.py in terminal. I would reccomend not running it on your microSD card. Run it on your ROM library locally then copy everything across manually. The way it downloads all jpegs then deletes them afterwards will fill up your card quickly and all of those writes can't be good for it.
+* That's it!
 
-```
-NAME=NES
-DESCNAME=Nintendo Entertainment System
-PATH=~/ROMS/NES/
-EXTENSION=.nes
-COMMAND=retroarch -L /path/to/core %ROM%
-PLATFORMID=7
-```
+Limitations
+====================
 
-* Run the script.
+* It's not 100% accurate but it does a pretty good job. It was tested on a fairly complete library of 700 ROMs and after much squashing of bugs it seems to have identified all of them correctly. Be aware that it's currently not particularly robust however. I
 
-Platform List
-=====================
-Below is a list of all available platforms in the database and their IDs.
+* If it badly screws up on a game it will probably break the cfg, but I've tested it extensively and it shouldn't do this. It should inform you if this happens and you'll be able to attempt to fix whatever's wrong.
 
-```
-[25] 3DO
-[4911] Amiga
-[23] Arcade
-[22] Atari 2600
-[26] Atari 5200
-[27] Atari 7800
-[28] Atari Jaguar
-[29] Atari Jaguar CD
-[30] Atari XE
-[31] Colecovision
-[40] Commodore 64
-[32] Intellivision
-[37] Mac OS
-[14] Microsoft Xbox
-[15] Microsoft Xbox 360
-[24] NeoGeo
-[4912] Nintendo 3DS
-[3] Nintendo 64
-[8] Nintendo DS
-[7] Nintendo Entertainment System (NES)
-[4] Nintendo Game Boy
-[5] Nintendo Game Boy Advance
-[41] Nintendo Game Boy Color
-[2] Nintendo GameCube
-[9] Nintendo Wii
-[38] Nintendo Wii U
-[1] PC
-[33] Sega 32X
-[21] Sega CD
-[16] Sega Dreamcast
-[20] Sega Game Gear
-[18] Sega Genesis
-[35] Sega Master System
-[36] Sega Mega Drive
-[17] Sega Saturn
-[10] Sony Playstation
-[11] Sony Playstation 2
-[12] Sony Playstation 3
-[39] Sony Playstation Vita
-[13] Sony PSP
-[6] Super Nintendo (SNES)
-[34] TurboGrafx 16
-```
+* For simplicity many of the original functions of ES-scraper were removed such as CRC checking and partial downloading. Because of this you cannot tell it to only add new games to the cfg. Each time it's run it will generate a whole new one.
+
+* It's not hugely efficient.. I wrote it for accuracy over speed. Even so it processed and downloaded boxart for my entire library in about half an hour. The slowest part is downloading the boxart since many of the copies are fairly high res.
+
+* I have only tested it on Linux so I can't say whether it will work on other platforms. My lazy path stuff might cause problems.
