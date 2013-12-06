@@ -5,12 +5,19 @@ from xml.etree.ElementTree import Element, SubElement
 
 parser = argparse.ArgumentParser(description='BS-scraper, a modified version of ES-scraper for BeagleSnes ')
 parser.add_argument("-noimg", help="disables boxart downloading", action='store_true')
+parser.add_argument("-offline", help="disables internet searching, just generates a cfg", action='store_true')
 parser.add_argument("-m", help="manual mode (choose from multiple results)", action='store_true')
 args = parser.parse_args()
 
 def normalize(s):
    #return ''.join((c for c in unicodedata.normalize('NFKD', unicode(s)) if unicodedata.category(c) != 'Mn')).replace("\n", " ")
    return s.encode('ascii', 'ignore').replace("\n", " ")
+
+def normalizeTitle(s):
+   rdict = { "'": "", "II": "2", "III": "3", "IV": "4", "V": "5", "VI": "6", "VII": "7", "VIII": "8", "IX": "9" }
+   fasdf = re.compile('|'.join(rdict.keys()))
+   return fasdf.sub(lambda m: rdict[m.group(0)], s)
+
 def fixExtension(file):    
     newfile="%s.%s" % (os.path.splitext(file)[0],imghdr.what(file))
     os.rename(file, newfile)
@@ -37,6 +44,7 @@ def searchGame(data, title):
 
 def getGamesListID(file):
     title=re.sub(r'\[.*?\]|\(.*?\)', '', os.path.splitext(os.path.basename(file))[0]).strip()
+    title=normalizeTitle(title)
     URL = "http://thegamesdb.net/api/GetGamesList.php"
     platform = "Super Nintendo (SNES)"
     values={'name':title,'platform':platform}
@@ -93,7 +101,8 @@ def getCoop(nodes):
    return getText(nodes.find("co-op"))
 
 def getTitle(nodes):
-   return getText(nodes.find("GameTitle"))
+   
+   return normalizeTitle(getText(nodes.find("GameTitle")))
 
 def getPlayers(nodes):
    return getText(nodes.find("Players"))
@@ -195,11 +204,13 @@ def scanFiles():
                 try:
                     filepath=os.path.abspath(os.path.join(root, files))
                     filename = os.path.splitext(files)[0]
-    
-                    print "Trying to identify %s.." % files
+                    if args.offline is False:
+                       print "Trying to identify %s.." % files
                     
-                    game_id=getGamesListID(filepath) # Uses the more accurate getGamesList API function to get the ID
-                    data=getGameInfo(game_id) # Passes the ID to get the rest of the game info
+                       game_id=getGamesListID(filepath) # Uses the more accurate getGamesList API function to get the ID
+                       data=getGameInfo(game_id) # Passes the ID to get the rest of the game info
+                    else:
+                       data=None
 
                     # Defaults so it will still have something to add if it can't find the game
                     str_title=filename
@@ -212,9 +223,11 @@ def scanFiles():
                     str_coop=""
                     lst_genres=["Unknown"]
      
-                    if data is None:
+                    if data is None and args.offline is False:
                        print "%s not found in database. Adding it to cfg with generic data." % files
                        failed_list.append(files)
+                    elif args.offline is True:
+                       print "Not searching online!"
                     else:
                        result=data
                        str_title=getTitle(result)
@@ -244,6 +257,8 @@ def scanFiles():
                           print "Skipping image download for " + str_title
                           if imgexists == True:
                              str_img=filename + ".png"
+                          else:
+                             str_img="blank_box.png"
                           
                        if str_des is None:
                           str_des = "No description available."
@@ -345,5 +360,6 @@ print parser.description
 
 if args.noimg:
     print "Boxart downloading disabled."
+    scanFiles()
 else:
    scanFiles()
