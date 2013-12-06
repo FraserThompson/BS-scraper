@@ -14,7 +14,7 @@ def normalize(s):
    return s.encode('ascii', 'ignore').replace("\n", " ")
 
 def normalizeTitle(s):
-   rdict = { "'": "", "II": "2", "III": "3", "IV": "4", "V": "5", "VI": "6", "VII": "7", "VIII": "8", "IX": "9" }
+   rdict = { "'": "", "II": "2", "III": "3", "IV": "4", "VI": "6", "VII": "7", "VIII": "8", "IX": "9" }
    fasdf = re.compile('|'.join(rdict.keys()))
    return fasdf.sub(lambda m: rdict[m.group(0)], s)
 
