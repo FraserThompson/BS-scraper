@@ -14,11 +14,13 @@ def normalize(s):
    return s.encode('ascii', 'ignore').replace("\n", " ")
 
 def normalizeTitle(s):
-   rdict = { "'": "", "II": "2", "III": "3", "IV": "4", "VI": "6", "VII": "7", "VIII": "8", "IX": "9" }
-   fasdf = re.compile('|'.join(rdict.keys()))
-   return fasdf.sub(lambda m: rdict[m.group(0)], s)
+   dicti = {"'9": "9", "\\bIII\\b": "3", "\\bII\\b": "2", "\\bIV\\b": "4", "\\bVII\\b": "7", "\\bVIII\\b": "8", "\\bVI\\b": "6",  "\\bIX\\b": "9"}
+   for key in dicti:
+      s = re.sub(key, dicti[key], s)
+   return s
 
-def fixExtension(file):    
+
+def fixExtension(file):
     newfile="%s.%s" % (os.path.splitext(file)[0],imghdr.what(file))
     os.rename(file, newfile)
     return newfile
@@ -49,13 +51,22 @@ def getGamesListID(file):
     platform = "Super Nintendo (SNES)"
     values={'name':title,'platform':platform}
 
-    try:
-        req = urllib2.Request(URL,urllib.urlencode(values), headers={'User-Agent' : "RetroPie Scraper Browser"})
-        remotedata = urllib2.urlopen( req )
-        data=ET.parse(remotedata).getroot()
-    except ET.ParseError:
-        print "Malformed XML found, skipping game.. (source: {%s})" % URL
-        return None
+    for attempt in range(5):
+       try:
+          req = urllib2.Request(URL,urllib.urlencode(values), headers={'User-Agent' : "RetroPie Scraper Browser"})
+          remotedata = urllib2.urlopen( req )
+          data=ET.parse(remotedata).getroot()
+       except ET.ParseError:
+          print "Malformed XML found, skipping game.. (source: {%s})" % URL
+          return None
+       except urllib2.URLError:
+          print "Problem acessing server, retrying..."
+          continue
+       else:
+          break
+    else:
+       print "Couldn't access server! Oh dear!"
+       return None
 
     try:
        if data.find("Game") is not None:
@@ -73,15 +84,24 @@ def getGamesListID(file):
 def getGameInfo(game_id):
     URL = "http://thegamesdb.net/api/GetGame.php"
     values={'id':game_id}
-
-    try:
-        req = urllib2.Request(URL,urllib.urlencode(values), headers={'User-Agent' : "RetroPie Scraper Browser"})
-        remotedata = urllib2.urlopen( req )
-        data=ET.parse(remotedata).getroot()
-    except ET.ParseError:
-        print "Malformed XML found, skipping game.. (source: {%s})" % URL
-        return None
-
+    
+    for attempt in range(5):
+       try:
+          req = urllib2.Request(URL,urllib.urlencode(values), headers={'User-Agent' : "RetroPie Scraper Browser"})
+          remotedata = urllib2.urlopen( req )
+          data=ET.parse(remotedata).getroot()
+       except ET.ParseError:
+          print "Malformed XML found, skipping game.. (source: {%s})" % URL
+          return None
+       except urllib2.URLError:
+          print "Problem accessing server, retrying..."
+          continue
+       else:
+          break
+    else:
+       print "Couldn't acess server! Oh dear!"
+       return None
+          
     try:
        if data.find("Game") is not None:
           return data.find("Game")
@@ -208,7 +228,10 @@ def scanFiles():
                        print "Trying to identify %s.." % files
                     
                        game_id=getGamesListID(filepath) # Uses the more accurate getGamesList API function to get the ID
-                       data=getGameInfo(game_id) # Passes the ID to get the rest of the game info
+                       if (game_id != None):
+                          data=getGameInfo(game_id) # Passes the ID to get the rest of the game info
+                       else:
+                          data=None
                     else:
                        data=None
 
