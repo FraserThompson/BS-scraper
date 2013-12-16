@@ -31,7 +31,7 @@ By default it will attempt to find the title of each .smc file in thegamesdb.net
 * Release date.
 * Genres, which it will seperate by a slash if it finds multiples.
 
-It then writes the blank file at the end which is required by Beaglesnes, and reports which game(s) it couldn't find online. If you just want a quick config from your rom folder without all the extra info or boxart you can use the -offline option and if you just don't want boxart to be downloaded you can use -noimg.
+It then writes the blank line at the end which is required by Beaglesnes, and reports which game(s) it couldn't find online. If you just want a quick config from your rom folder without all the extra info or boxart you can use the -offline option and if you just don't want boxart to be downloaded you can use -noimg.
 
 Usage
 =====================
@@ -44,7 +44,7 @@ Limitations
 
 * For simplicity many of the original functions of ES-scraper were removed such as CRC checking and partial downloading. Because of this you cannot tell it to only add new games to the cfg. Each time it's run it will generate a whole new one. You can tell it to skip images though, and it will automatically skip images if they're already there.
 
-* It's not hugely efficient.. I wrote it for accuracy over speed. Even so it processed and downloaded boxart for my entire library of 700 in about half an hour. The slowest part is downloading the boxart since many of the copies are fairly high res. If you just want a config you can use the -offline option and it will be much faster.
+* It's not hugely efficient... I wrote it for accuracy over speed. Even so it processed and downloaded boxart for my entire library of 700 in about half an hour. The slowest part is downloading the boxart since many of the copies are fairly high res. If you just want a config you can use the -offline option and it will be much faster.
 
 * If it badly screws up on a game it will probably break the cfg, but I've tested it extensively and it shouldn't do this. It should inform you in the unlikely event that this does happen.
 
