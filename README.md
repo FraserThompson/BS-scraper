@@ -1,5 +1,8 @@
 BS-scraper
 =====================
+THIS PROJECT IS OBSOLETE AND COMPLETELY USELESS. Newer versions of BeagleSnes use a much more sensible XML format. Maybe some day I'll get round to updating this.
+
+
 ```
 usage: scraper.py [-h] [-noimg] [-offline] [-m]
 
